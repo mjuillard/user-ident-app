@@ -1,4 +1,4 @@
-package com.matjuillard.useridentapp.model.response;
+package com.matjuillard.useridentapp.model.response.user;
 
 public class UserRest {
 
