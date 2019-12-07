@@ -1,9 +1,14 @@
 package com.matjuillard.useridentapp.service.impl;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import com.matjuillard.useridentapp.exception.ErrorMessages;
 import com.matjuillard.useridentapp.exception.UserServiceException;
+import com.matjuillard.useridentapp.model.dto.AddressDto;
 import com.matjuillard.useridentapp.model.dto.UserDto;
 import com.matjuillard.useridentapp.model.entity.UserEntity;
 import com.matjuillard.useridentapp.repository.UserRepository;
@@ -41,17 +47,23 @@ public class UserServiceImpl implements UserService {
 					+ user.getEmail() + " exists.");
 		}
 
-		UserEntity userEntity = new UserEntity();
-		BeanUtils.copyProperties(user, userEntity);
-
 		String publicUserId = appUtils.generateRandomUserId(AppUtils.RANDOM_LENGTH);
-		userEntity.setUserId(publicUserId);
-		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+		user.setUserId(publicUserId);
+		user.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+		for (AddressDto addressDto : user.getAddresses()) {
+			addressDto.setUserDetails(user);
+			addressDto.setAddressId(appUtils.generateRandomAddressId(AppUtils.RANDOM_LENGTH));
+		}
+
+		final ModelMapper mapper = new ModelMapper();
+		final UserEntity userEntity = mapper.map(user, UserEntity.class);
+//		String publicUserId = appUtils.generateRandomUserId(AppUtils.RANDOM_LENGTH);
+//		userEntity.setUserId(publicUserId);
+//		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
 		UserEntity storedUserDetails = userRepository.save(userEntity);
-		UserDto createdUserDto = new UserDto();
-		BeanUtils.copyProperties(storedUserDetails, createdUserDto);
 
+		final UserDto createdUserDto = mapper.map(storedUserDetails, UserDto.class);
 		return createdUserDto;
 	}
 
@@ -106,6 +118,26 @@ public class UserServiceImpl implements UserService {
 		}
 
 		userRepository.delete(userEntity);
+	}
+
+	@Override
+	public List<UserDto> getUsers(int page, int limit) {
+		List<UserDto> result = new ArrayList<UserDto>();
+
+		if (page > 0) {
+			page = page - 1;
+		}
+		Pageable pageableRequest = PageRequest.of(page, limit);
+		Page<UserEntity> usersPage = userRepository.findAll(pageableRequest);
+		List<UserEntity> userEntities = usersPage.getContent();
+
+		for (UserEntity userEntitiy : userEntities) {
+			UserDto userDto = new UserDto();
+			BeanUtils.copyProperties(userEntitiy, userDto);
+			result.add(userDto);
+		}
+
+		return result;
 	}
 
 	// Inherited from Spring Security to find user details

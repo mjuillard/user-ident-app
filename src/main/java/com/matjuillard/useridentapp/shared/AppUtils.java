@@ -16,6 +16,10 @@ public class AppUtils {
 		return generateRandomString(length);
 	}
 
+	public String generateRandomAddressId(int length) {
+		return generateRandomString(length);
+	}
+
 	private String generateRandomString(int length) {
 		StringBuilder returnValue = new StringBuilder();
 
