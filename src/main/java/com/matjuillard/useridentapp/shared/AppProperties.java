@@ -6,13 +6,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppProperties {
 
-	@Value("${token.prefix}")
+	@Value("${app-token.prefix}")
 	private String tokenPrefix;
 
-	@Value("${token.secret}")
+	@Value("${app-token.secret}")
 	private String tokenSecret;
 
-	@Value("${token.expirationTime}")
+	@Value("${app-token.expirationTime}")
 	private long tokenExpirationTime;
 
 	public String getTokenPrefix() {
@@ -26,4 +26,5 @@ public class AppProperties {
 	public long getTokenExpirationTime() {
 		return tokenExpirationTime;
 	}
+
 }

@@ -1,24 +1,50 @@
 spring:
   application:
     name: user-ident-app
+    
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: admin
     password: admin
+    
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    
   h2:
     console:
       enabled: true
+      
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: XXXXXXX
+    password: XXXXXXX
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+          auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+     
 server:
   port: 8080
   #servlet:
   #  context-path: /user-ident-app
 
-token:
+app-token:
   secret: "jf9i4jgu83nfl0"
   prefix: "Bearer "
   expirationTime: 864000000 # 10 days
- 
-loginUrl: "/users"
+  password-reset-expiration-time: 3600000 # 1 hour
+
+login-url: "/users/"
+email-verification-url: "/users/email-verification"
+password-reset-request-url: "/users/password-reset-request"
+password-reset-url: "/users/password-reset"
+
+  

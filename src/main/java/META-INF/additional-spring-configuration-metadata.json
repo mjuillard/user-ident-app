@@ -1,5 +1,37 @@
-{"properties": [{
-  "name": "tokenSecret",
-  "type": "java.lang.String",
-  "description": "A description for 'tokenSecret'"
-}]}
+{"properties": [
+  {
+    "name": "tokenSecret",
+    "type": "java.lang.String",
+    "description": "A description for 'tokenSecret'"
+  },
+  {
+    "name": "login-url",
+    "type": "java.lang.String",
+    "description": "A description for 'login-url'"
+  },
+  {
+    "name": "login-url",
+    "type": "java.lang.String",
+    "description": "A description for 'login-url'"
+  },
+  {
+    "name": "password-reset-url",
+    "type": "java.lang.String",
+    "description": "A description for 'password-reset-url'"
+  },
+  {
+    "name": "email-verification-url",
+    "type": "java.lang.String",
+    "description": "A description for 'email-verification-url'"
+  },
+  {
+    "name": "password-reset-request-url",
+    "type": "java.lang.String",
+    "description": "A description for 'password-reset-request-url'"
+  },
+  {
+    "name": "password-reset-request-url",
+    "type": "java.lang.String",
+    "description": "A description for 'password-reset-request-url'"
+  }
+]}

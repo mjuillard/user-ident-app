@@ -1,5 +1,8 @@
 package com.matjuillard.useridentapp.controller;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +11,9 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.matjuillard.useridentapp.model.dto.AddressDto;
 import com.matjuillard.useridentapp.model.dto.UserDto;
+import com.matjuillard.useridentapp.model.request.PasswordResetModel;
+import com.matjuillard.useridentapp.model.request.PasswordResetRequestModel;
 import com.matjuillard.useridentapp.model.request.UserDetailsRequestModel;
 import com.matjuillard.useridentapp.model.response.AddressRest;
 import com.matjuillard.useridentapp.model.response.OperationStatusModel;
@@ -34,6 +42,10 @@ import com.matjuillard.useridentapp.service.UserService;
 @RestController
 @RequestMapping("/users")
 public class UserController {
+
+	private static final String ADDRESS_LINK = "address";
+	private static final String ADDRESSES_LINK = "addresses";
+	private static final String USER_LINK = "user";
 
 	@Autowired
 	private UserService userService;
@@ -55,11 +67,7 @@ public class UserController {
 			MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public UserRest createUser(@RequestBody UserDetailsRequestModel userDetails) throws Exception {
 
-		// UserDto userDto = new UserDto();
-		// BeanUtils.copyProperties(userDetails, userDto);
-		// ModelMapper mapper = new ModelMapper();
 		UserDto userDto = mapper.map(userDetails, UserDto.class);
-
 		UserDto createdUser = userService.createUser(userDto);
 		UserRest user = mapper.map(createdUser, UserRest.class);
 
@@ -111,8 +119,8 @@ public class UserController {
 	}
 
 	@GetMapping(path = "/{id}/addresses", produces = { MediaType.APPLICATION_JSON_VALUE,
-			MediaType.APPLICATION_XML_VALUE })
-	public List<AddressRest> getAddresses(@PathVariable String id) {
+			MediaType.APPLICATION_XML_VALUE, "application/hal+json" })
+	public CollectionModel<AddressRest> getUserAddresses(@PathVariable String id) {
 		List<AddressRest> result = new ArrayList<AddressRest>();
 		List<AddressDto> addressesDto = addressService.getAddresses(id);
 
@@ -120,15 +128,88 @@ public class UserController {
 			Type listType = new TypeToken<List<AddressRest>>() {
 			}.getType();
 			result = mapper.map(addressesDto, listType);
+
+			// Add Hateoas links
+			for (AddressRest addressRest : result) {
+				Link addressLink = linkTo(methodOn(UserController.class).getUserAddress(id, addressRest.getAddressId()))
+						.withSelfRel();
+				Link userLink = linkTo(methodOn(UserController.class).getUser(id)).withRel(USER_LINK);
+				addressRest.add(addressLink);
+				addressRest.add(userLink);
+			}
+		}
+
+		return new CollectionModel<AddressRest>(result);
+	}
+
+	@GetMapping(path = "/{userId}/addresses/{addressId}", produces = { MediaType.APPLICATION_JSON_VALUE,
+			MediaType.APPLICATION_XML_VALUE, "application/hal+json" })
+	public EntityModel<AddressRest> getUserAddress(@PathVariable String userId, @PathVariable String addressId) {
+		AddressDto address = addressService.getAddress(addressId);
+
+		AddressRest addressesRest = mapper.map(address, AddressRest.class);
+
+		// Add Hateoas links
+		Link addressLink = linkTo(methodOn(UserController.class).getUserAddress(userId, addressId)).withSelfRel();
+		Link userLink = linkTo(methodOn(UserController.class).getUser(userId)).withRel(USER_LINK);
+		Link addressesLink = linkTo(methodOn(UserController.class).getUserAddresses(userId)).withRel(ADDRESSES_LINK);
+		addressesRest.add(addressLink);
+		addressesRest.add(userLink);
+		addressesRest.add(addressesLink);
+
+		return new EntityModel<AddressRest>(addressesRest);
+	}
+
+	@GetMapping(path = "/email-verification", produces = { MediaType.APPLICATION_JSON_VALUE,
+			MediaType.APPLICATION_XML_VALUE })
+	public OperationStatusModel verifyEmailToken(@RequestParam(value = "token") String token) {
+
+		OperationStatusModel result = new OperationStatusModel();
+		result.setOperationName(RequestOperationName.VERIFY_EMAIL.name());
+
+		if (userService.verifyEmailToken(token)) {
+			result.setOperationResult(RequestOperationStatus.SUCCESS.name());
+		} else {
+			result.setOperationResult(RequestOperationStatus.ERROR.name());
 		}
 
 		return result;
 	}
 
-	@GetMapping(path = "/{userId}/addresses/{addressId}", produces = { MediaType.APPLICATION_JSON_VALUE,
+	@PostMapping(path = "/password-reset-request", consumes = { MediaType.APPLICATION_JSON_VALUE,
+			MediaType.APPLICATION_XML_VALUE }, produces = { MediaType.APPLICATION_JSON_VALUE,
+					MediaType.APPLICATION_XML_VALUE })
+	public OperationStatusModel resetPasswordRequest(@RequestBody PasswordResetRequestModel passwordResetRequestModel)
+			throws Exception {
+
+		OperationStatusModel result = new OperationStatusModel();
+
+		boolean operationResult = userService.requestResetPassword(passwordResetRequestModel.getEmail());
+		result.setOperationName(RequestOperationName.REQUEST_PASSWORD_RESET.name());
+		result.setOperationResult(RequestOperationStatus.ERROR.name());
+
+		if (operationResult) {
+			result.setOperationResult(RequestOperationStatus.SUCCESS.name());
+		}
+
+		return result;
+	}
+
+	@PostMapping(path = "/password-reset", consumes = { MediaType.APPLICATION_JSON_VALUE,
 			MediaType.APPLICATION_XML_VALUE })
-	public AddressRest getUserAddress(@PathVariable String userId, @PathVariable String addressId) {
-		AddressDto address = addressService.getAddress(addressId);
-		return mapper.map(address, AddressRest.class);
+	public OperationStatusModel resetPassword(@RequestBody PasswordResetModel passwordResetModel) throws Exception {
+
+		OperationStatusModel result = new OperationStatusModel();
+		boolean operationResult = userService.resetPassword(passwordResetModel.getToken(),
+				passwordResetModel.getPassword());
+
+		result.setOperationName(RequestOperationName.PASSWORD_RESET.name());
+		result.setOperationResult(RequestOperationStatus.ERROR.name());
+
+		if (operationResult) {
+			result.setOperationResult(RequestOperationStatus.SUCCESS.name());
+		}
+
+		return result;
 	}
 }

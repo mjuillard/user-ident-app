@@ -1,9 +1,16 @@
 package com.matjuillard.useridentapp.shared;
 
 import java.security.SecureRandom;
+import java.util.Date;
 import java.util.Random;
 
 import org.springframework.stereotype.Component;
+
+import com.matjuillard.useridentapp.security.SecurityConstants;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class AppUtils {
@@ -28,5 +35,23 @@ public class AppUtils {
 		}
 
 		return returnValue.toString();
+	}
+
+	public boolean hasTokenExpired(String token) {
+		Claims claims = Jwts.parser().setSigningKey(SecurityConstants.getTokenSecret()).parseClaimsJws(token).getBody();
+
+		Date tokenExpirationDate = claims.getExpiration();
+		Date currentDate = new Date();
+
+		return tokenExpirationDate.before(currentDate);
+	}
+
+	public String generateEmailToken(String userId, long tokenExpirationTime) {
+
+		String token = Jwts.builder().setSubject(userId)
+				.setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime))
+				.signWith(SignatureAlgorithm.HS512, SecurityConstants.getTokenSecret()).compact();
+
+		return token;
 	}
 }
