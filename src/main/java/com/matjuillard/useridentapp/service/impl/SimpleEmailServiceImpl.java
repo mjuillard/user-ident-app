@@ -1,19 +1,18 @@
 package com.matjuillard.useridentapp.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import java.util.Properties;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
-import com.amazonaws.services.simpleemail.model.Body;
-import com.amazonaws.services.simpleemail.model.Content;
-import com.amazonaws.services.simpleemail.model.Destination;
-import com.amazonaws.services.simpleemail.model.Message;
-import com.amazonaws.services.simpleemail.model.SendEmailRequest;
-import com.amazonaws.services.simpleemail.model.SendEmailResult;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import com.matjuillard.useridentapp.model.dto.UserDto;
 import com.matjuillard.useridentapp.service.SimpleEmailService;
 
@@ -21,44 +20,43 @@ import com.matjuillard.useridentapp.service.SimpleEmailService;
 public class SimpleEmailServiceImpl implements SimpleEmailService {
 
 	protected static final String FROM = "matjuillard.useridentapp.com";
-	protected static final String EMAIL_LINK = "http://localhost:8080/email-verification?token=";
 	protected static final String SUBJECT = "Complete your registration";
 
 	protected final String HTML_BODY = "<h1>Please verify your email</h1>"
 			+ "<br/>Click on the following link: <a href='$emailLink'>Complete registration link</a><br/>";
 
-	protected final String PASSWORD_RESET_HTML_BODY = "<h1>Please verify your email</h1>" + "<br/>Hi $firstName"
+	protected final String PASSWORD_RESET_HTML_BODY = "<h1>Please verify your email</h1>" + "<br/>Dear $firstName"
 			+ "<br/>Click on the following link: <a href='$emailLink'>Complete registration link</a><br/>";
 
-	@Autowired
-	public JavaMailSender emailSender;
+	protected final String PASSWORD_RESET_BODY = "Please verify your email\n\n" + "Dear $firstName"
+			+ "\nPlease go to the following link: $emailLink \nto complete your registration";
+
+	@Value("${email-verification-url-link}")
+	private String emailVerificationUrlLink;
 
 	public void verifyEmail(UserDto userDto) {
 
-		String htmlBody = HTML_BODY.replace("$emailLink", EMAIL_LINK);
-		String htmlBodyWithToken = htmlBody.concat(userDto.getEmailVerificationToken());
+		String emailWithToken = emailVerificationUrlLink.concat(userDto.getEmailVerificationToken());
+		String htmlBodyWithToken = PASSWORD_RESET_BODY.replace("$emailLink", emailWithToken).replace("$firstName",
+				userDto.getFirstName());
 
 		/*
 		 * Gmail email sender
 		 */
-//		SimpleMailMessage message = new SimpleMailMessage();
-//		message.setTo(userDto.getEmail());
-//		message.setSubject(SUBJECT);
-//		message.setText(htmlBodyWithToken);
-//		emailSender.send(message);
+		sendMail(userDto.getEmail(), SUBJECT, htmlBodyWithToken);
 
 		/*
 		 * Amazon Simple Email Service
 		 */
-		AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
-				.withRegion(Regions.EU_CENTRAL_1).build();
-		SendEmailRequest request = new SendEmailRequest()
-				.withDestination(new Destination().withToAddresses(userDto.getEmail()))
-				.withMessage(new Message()
-						.withBody(new Body().withHtml(new Content().withCharset("UTF-8").withData(htmlBodyWithToken)))
-						.withSubject(new Content().withCharset("UTF-8").withData(SUBJECT)))
-				.withSource(FROM);
-		client.sendEmail(request);
+//		AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
+//				.withRegion(Regions.EU_CENTRAL_1).build();
+//		SendEmailRequest request = new SendEmailRequest()
+//				.withDestination(new Destination().withToAddresses(userDto.getEmail()))
+//				.withMessage(new Message()
+//						.withBody(new Body().withHtml(new Content().withCharset("UTF-8").withData(htmlBodyWithToken)))
+//						.withSubject(new Content().withCharset("UTF-8").withData(SUBJECT)))
+//				.withSource(FROM);
+//		client.sendEmail(request);
 
 	}
 
@@ -67,18 +65,68 @@ public class SimpleEmailServiceImpl implements SimpleEmailService {
 		String htmlBody = PASSWORD_RESET_HTML_BODY.replace("$emailLink", email).replace("$firstName", firstName);
 		String htmlBodyWithToken = htmlBody.concat(token);
 
-		AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard().withRegion(Regions.EU_WEST_3)
-				.build();
-		SendEmailRequest request = new SendEmailRequest().withDestination(new Destination().withToAddresses(email))
-				.withMessage(new Message()
-						.withBody(new Body().withHtml(new Content().withCharset("UTF-8").withData(htmlBodyWithToken)))
-						.withSubject(new Content().withCharset("UTF-8").withData(SUBJECT)))
-				.withSource(FROM);
-		SendEmailResult result = client.sendEmail(request);
-		if (result != null && !StringUtils.isEmpty(result.getMessageId())) {
-			return true;
+		/*
+		 * Gmail email sender
+		 */
+		return sendMail(email, SUBJECT, htmlBodyWithToken);
+
+		/*
+		 * Amazon Simple Email Service
+		 */
+//		AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard().withRegion(Regions.EU_WEST_3)
+//				.build();
+//		SendEmailRequest request = new SendEmailRequest().withDestination(new Destination().withToAddresses(email))
+//				.withMessage(new Message()
+//						.withBody(new Body().withHtml(new Content().withCharset("UTF-8").withData(htmlBodyWithToken)))
+//						.withSubject(new Content().withCharset("UTF-8").withData(SUBJECT)))
+//				.withSource(FROM);
+//		SendEmailResult result = client.sendEmail(request);
+//		if (result != null && !StringUtils.isEmpty(result.getMessageId())) {
+//			return true;
+//		}
+//
+//		return false;
+	}
+
+	private boolean sendMail(String email, String subject, String body) {
+
+		// 1. Deactivate avast
+		// 2. Go to https://myaccount.google.com/security : Acces - securisé des apps
+		// 3. Put gmail credentials below
+
+		final String username = "XXXXXXXXX";
+		final String password = "XXXXXXXXX";
+
+		Properties prop = new Properties();
+		prop.put("mail.smtp.host", "smtp.gmail.com");
+		prop.put("mail.smtp.port", "465");
+		prop.put("mail.smtp.auth", "true");
+		prop.put("mail.smtp.socketFactory.port", "465");
+		prop.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+
+		Session session = Session.getInstance(prop, new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(username, password);
+			}
+		});
+
+		try {
+
+			Message message = new MimeMessage(session);
+			message.setFrom(new InternetAddress(username));
+			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email));
+			message.setSubject(subject);
+			message.setText(body);
+
+			Transport.send(message);
+
+			System.out.println("Done");
+
+		} catch (MessagingException e) {
+			e.printStackTrace();
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 }

@@ -14,22 +14,6 @@ spring:
   h2:
     console:
       enabled: true
-      
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: XXXXXXX
-    password: XXXXXXX
-    properties:
-      mail:
-        smtp:
-          starttls:
-            enable: true
-          auth: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-
      
 server:
   port: 8080
@@ -44,6 +28,7 @@ app-token:
 
 login-url: "/users/"
 email-verification-url: "/users/email-verification"
+email-verification-url-link: "http://localhost:8080/users/email-verification?token="
 password-reset-request-url: "/users/password-reset-request"
 password-reset-url: "/users/password-reset"
 

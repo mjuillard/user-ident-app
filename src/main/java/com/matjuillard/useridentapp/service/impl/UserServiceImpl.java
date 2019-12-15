@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
 		user.setUserId(publicUserId);
 		user.setEncryptedPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 		user.setEmailVerificationToken(appUtils.generateEmailToken(publicUserId, tokenExpirationTime));
-		user.setEmailVerificationStatus(Boolean.FALSE); // put to false for enable EmailVerificationSystem
+		user.setEmailVerificationStatus(Boolean.FALSE);
 
 		if (!CollectionUtils.isEmpty(user.getAddresses())) {
 			for (AddressDto addressDto : user.getAddresses()) {
