@@ -26,10 +26,15 @@ app-token:
   expirationTime: 864000000 # 10 days
   password-reset-expiration-time: 3600000 # 1 hour
 
-login-url: "/users/"
-email-verification-url: "/users/email-verification"
-email-verification-url-link: "http://localhost:8080/users/email-verification?token="
-password-reset-request-url: "/users/password-reset-request"
-password-reset-url: "/users/password-reset"
+login-url: "/users/" # url to login to application is /users/login instead of /login
+
+email-verification:
+  enable: false
+  url: "/users/email-verification"
+  link: "http://localhost:8080/users/email-verification?token="
+password-reset:
+  link: "http://localhost:8080/verification-service/password-reset.html?token="
+  request-url: "/users/password-reset-request"
+  url: "/users/password-reset"
 
   

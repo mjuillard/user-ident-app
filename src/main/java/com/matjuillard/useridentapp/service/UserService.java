@@ -25,4 +25,14 @@ public interface UserService extends UserDetailsService {
 	boolean requestResetPassword(String email);
 
 	boolean resetPassword(String token, String password);
+
+	/**
+	 * Method to bypass sending E-mail management - 
+	 * Should not be there in real Life!
+	 * 
+	 * @param email
+	 * @param password
+	 * @return
+	 */
+	boolean requestResetDirectPassword(String email, String password);
 }

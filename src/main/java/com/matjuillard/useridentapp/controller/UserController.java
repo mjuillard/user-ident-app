@@ -212,4 +212,23 @@ public class UserController {
 
 		return result;
 	}
+
+	@PostMapping(path = "/password-reset-request-direct", consumes = { MediaType.APPLICATION_JSON_VALUE,
+			MediaType.APPLICATION_XML_VALUE }, produces = { MediaType.APPLICATION_JSON_VALUE,
+					MediaType.APPLICATION_XML_VALUE })
+	public OperationStatusModel resetPasswordRequest(@RequestBody PasswordResetRequestModel passwordResetRequestModel,
+			@RequestBody String email, @RequestBody String newPassword) throws Exception {
+
+		OperationStatusModel result = new OperationStatusModel();
+
+		boolean operationResult = userService.requestResetDirectPassword(email, newPassword);
+		result.setOperationName(RequestOperationName.REQUEST_PASSWORD_RESET.name());
+		result.setOperationResult(RequestOperationStatus.ERROR.name());
+
+		if (operationResult) {
+			result.setOperationResult(RequestOperationStatus.SUCCESS.name());
+		}
+
+		return result;
+	}
 }

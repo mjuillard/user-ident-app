@@ -16,11 +16,11 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
 	@Value("${login-url}")
 	private String loginUrl;
-	@Value("${email-verification-url}")
+	@Value("${email-verification.url}")
 	private String emailVerificationUrl;
-	@Value("${password-reset-request-url}")
+	@Value("${password-reset.request-url}")
 	private String passwordResetRequestUrl;
-	@Value("${password-reset-url}")
+	@Value("${password-reset.url}")
 	private String passwordResetUrl;
 
 	private final UserService userDetailsService;

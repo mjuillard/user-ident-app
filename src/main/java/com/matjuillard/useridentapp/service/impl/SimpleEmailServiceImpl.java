@@ -25,19 +25,25 @@ public class SimpleEmailServiceImpl implements SimpleEmailService {
 	protected final String HTML_BODY = "<h1>Please verify your email</h1>"
 			+ "<br/>Click on the following link: <a href='$emailLink'>Complete registration link</a><br/>";
 
-	protected final String PASSWORD_RESET_HTML_BODY = "<h1>Please verify your email</h1>" + "<br/>Dear $firstName"
-			+ "<br/>Click on the following link: <a href='$emailLink'>Complete registration link</a><br/>";
-
-	protected final String PASSWORD_RESET_BODY = "Please verify your email\n\n" + "Dear $firstName"
+	protected final String BODY = "Please verify your email\n\n" + "Dear $firstName"
 			+ "\nPlease go to the following link: $emailLink \nto complete your registration";
 
-	@Value("${email-verification-url-link}")
+	protected final String PASSWORD_RESET_HTML_BODY = "<h1>Please change your email</h1>" + "<br/>Dear $firstName"
+			+ "<br/>Click on the following link: <a href='$passwordReset'>Modify your password</a><br/>";
+
+	protected final String PASSWORD_RESET_BODY = "Please change your email\n\n" + "Dear $firstName"
+			+ "\nPlease go to the following link: $passwordReset \nto modify your password";
+
+	@Value("${email-verification.link}")
 	private String emailVerificationUrlLink;
+
+	@Value("${password-reset.link}")
+	private String passwordResetLink;
 
 	public void verifyEmail(UserDto userDto) {
 
 		String emailWithToken = emailVerificationUrlLink.concat(userDto.getEmailVerificationToken());
-		String htmlBodyWithToken = PASSWORD_RESET_BODY.replace("$emailLink", emailWithToken).replace("$firstName",
+		String htmlBodyWithToken = BODY.replace("$emailLink", emailWithToken).replace("$firstName",
 				userDto.getFirstName());
 
 		/*
@@ -62,7 +68,8 @@ public class SimpleEmailServiceImpl implements SimpleEmailService {
 
 	public boolean sendPasswordResetRequest(String firstName, String email, String token) {
 
-		String htmlBody = PASSWORD_RESET_HTML_BODY.replace("$emailLink", email).replace("$firstName", firstName);
+		String link = passwordResetLink.concat(token);
+		String htmlBody = PASSWORD_RESET_BODY.replace("$passwordReset", link).replace("$firstName", firstName);
 		String htmlBodyWithToken = htmlBody.concat(token);
 
 		/*

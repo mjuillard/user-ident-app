@@ -38,6 +38,9 @@ public class UserServiceImpl implements UserService {
 	@Value("${app-token.password-reset-expiration-time}")
 	private long tokenPasswordReserExpirationTime;
 
+	@Value("${email-verification.enable}")
+	private boolean isEmailVerificationEnable;
+
 	@Autowired
 	UserRepository userRepository;
 	@Autowired
@@ -81,7 +84,12 @@ public class UserServiceImpl implements UserService {
 		final UserDto createdUserDto = mapper.map(storedUserDetails, UserDto.class);
 
 		// Email verification sender
-		emailService.verifyEmail(createdUserDto);
+		if (isEmailVerificationEnable) {
+			emailService.verifyEmail(createdUserDto);
+		} else {
+			// By pass email verification - set user valid
+			createdUserDto.setEmailVerificationStatus(Boolean.TRUE);
+		}
 
 		return createdUserDto;
 	}
@@ -244,6 +252,26 @@ public class UserServiceImpl implements UserService {
 		passwordResetTokenRepository.delete(passwordResetTokenEntity);
 
 		return false;
+	}
+
+	@Override
+	public boolean requestResetDirectPassword(String email, String password) {
+
+		UserEntity userEntity = userRepository.findByEmail(email);
+		if (userEntity == null) {
+			return false;
+		}
+
+		String encryptedPassword = bCryptPasswordEncoder.encode(password);
+		userEntity.setEncryptedPassword(encryptedPassword);
+		UserEntity savedUser = userRepository.save(userEntity);
+
+		if (savedUser != null && encryptedPassword.equalsIgnoreCase(savedUser.getEncryptedPassword())) {
+			return true;
+		}
+
+		return false;
+
 	}
 
 }
