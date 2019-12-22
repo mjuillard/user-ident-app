@@ -10,6 +10,8 @@ spring:
     
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate.format_sql: true
     
   h2:
     console:
@@ -20,6 +22,16 @@ server:
   #servlet:
   #  context-path: /user-ident-app
 
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+                
 app-token:
   secret: "jf9i4jgu83nfl0"
   prefix: "Bearer "
@@ -32,6 +44,7 @@ email-verification:
   enable: false
   url: "/users/email-verification"
   link: "http://localhost:8080/users/email-verification?token="
+
 password-reset:
   link: "http://localhost:8080/verification-service/password-reset.html?token="
   request-url: "/users/password-reset-request"
