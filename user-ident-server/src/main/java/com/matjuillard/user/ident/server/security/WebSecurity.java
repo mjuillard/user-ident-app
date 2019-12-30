@@ -47,26 +47,36 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
 		http.cors().and().headers().frameOptions().sameOrigin();
 		http.csrf().disable();
-		http.authorizeRequests().antMatchers(HttpMethod.GET, "*").permitAll();
+
+		// add authentication filter
+		http.authorizeRequests().and().addFilter(getAuthenticationFilter());
+		// add authorization filter
+		http.authorizeRequests().and().addFilter(new AuthorizationFilter(authenticationManager()));
+
+		// index
 		/*
-		 * // add authentication filter
-		 * http.authorizeRequests().and().addFilter(getAuthenticationFilter()); // add
-		 * authorization filter http.authorizeRequests().and().addFilter(new
-		 * AuthorizationFilter(authenticationManager()));
-		 * 
-		 * // Create a user auth - no authentication needed
-		 * http.authorizeRequests().antMatchers(HttpMethod.POST, loginUrl).permitAll();
-		 * // Email reset Password url - no authentication needed
-		 * http.authorizeRequests().antMatchers(HttpMethod.GET,
-		 * emailVerificationUrl).permitAll(); // Email reset password url - no
-		 * authentication needed http.authorizeRequests().antMatchers(HttpMethod.POST,
-		 * passwordResetRequestUrl).permitAll();
-		 * http.authorizeRequests().antMatchers(HttpMethod.POST,
-		 * passwordResetUrl).permitAll(); // H2 console access
-		 * http.authorizeRequests().antMatchers("/h2-console/**").permitAll(); // Other
-		 * requests - needs to be authenticated
-		 * http.authorizeRequests().anyRequest().authenticated();
+		 * http.authorizeRequests().antMatchers(HttpMethod.GET, "/").permitAll();
+		 * http.authorizeRequests().antMatchers(HttpMethod.GET, "/*.js").permitAll();
+		 * http.authorizeRequests().antMatchers(HttpMethod.GET, "/*.ico").permitAll();
 		 */
+
+		// Create a user auth - no authentication needed
+		http.authorizeRequests().antMatchers(HttpMethod.POST, loginUrl).permitAll();
+		// Email reset Password url - no authentication needed
+		http.authorizeRequests().antMatchers(HttpMethod.GET, emailVerificationUrl).permitAll();
+		// Email reset password url - no authentication needed
+		http.authorizeRequests().antMatchers(HttpMethod.POST, passwordResetRequestUrl).permitAll();
+		http.authorizeRequests().antMatchers(HttpMethod.POST, passwordResetUrl).permitAll();
+
+		// H2 console access
+		http.authorizeRequests().antMatchers("/h2-console/**").permitAll();
+
+		// Swagger permissions
+		http.authorizeRequests().antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**")
+				.permitAll();
+
+		// Other requests - needs to be authenticated
+		http.authorizeRequests().anyRequest().authenticated();
 		// Stateless session
 		http.authorizeRequests().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 	}

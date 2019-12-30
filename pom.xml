@@ -8,7 +8,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.2.1.RELEASE</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<relativePath />
 	</parent>
 
 	<groupId>com.matjuillard</groupId>
@@ -23,7 +23,7 @@
 	</properties>
 
 	<modules>
-		<module>user-ident-server</module>
 		<module>user-ident-front</module>
+		<module>user-ident-server</module>
 	</modules>
 </project>

@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -56,10 +55,8 @@ public class UserController {
 
 	@GetMapping(path = "/{id}", produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
 	public UserRest getUser(@PathVariable String id) {
-		UserRest user = new UserRest();
 		UserDto userDto = userService.getUserByUserId(id);
-
-		BeanUtils.copyProperties(userDto, user);
+		UserRest user = mapper.map(userDto, UserRest.class);
 		return user;
 	}
 
@@ -79,13 +76,9 @@ public class UserController {
 					MediaType.APPLICATION_XML_VALUE })
 	public UserRest updateUser(@PathVariable String id, @RequestBody UserDetailsRequestModel userDetails) {
 
-		UserRest user = new UserRest();
-		UserDto userDto = new UserDto();
-
-		BeanUtils.copyProperties(userDetails, userDto);
-
+		UserDto userDto = mapper.map(userDetails, UserDto.class);
 		UserDto updatedUser = userService.updateUser(id, userDto);
-		BeanUtils.copyProperties(updatedUser, user);
+		UserRest user = mapper.map(updatedUser, UserRest.class);
 
 		return user;
 	}
@@ -110,8 +103,7 @@ public class UserController {
 		List<UserDto> userDtoList = userService.getUsers(page, limit);
 
 		for (UserDto userDto : userDtoList) {
-			UserRest user = new UserRest();
-			BeanUtils.copyProperties(userDto, user);
+			UserRest user = mapper.map(userDto, UserRest.class);
 			users.add(user);
 		}
 

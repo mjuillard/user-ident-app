@@ -26,6 +26,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
+	private static final String USER_ID_HEADER = "userId";
+	private static final String EXPIRATION_TIME_HEADER = "expirationTime";
+
 	private final AuthenticationManager authenticationManager;
 
 	public AuthenticationFilter(AuthenticationManager authenticationManager) {
@@ -50,16 +53,20 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
 			Authentication authResult) throws IOException, ServletException {
 
-		String userName = ((User) authResult.getPrincipal()).getUsername();
-		String token = Jwts.builder().setSubject(userName)
-				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.getTokenExpirationTime()))
+		final String userName = ((User) authResult.getPrincipal()).getUsername();
+		final Date expirationDate = new Date(System.currentTimeMillis() + SecurityConstants.getTokenExpirationTime());
+
+		String token = Jwts.builder().setSubject(userName).setExpiration(expirationDate)
 				.signWith(SignatureAlgorithm.HS512, SecurityConstants.getTokenSecret()).compact();
 
 		UserService userService = (UserService) SpringApplicationContext.getBean("userServiceImpl");
 		UserDto userDto = userService.getUser(userName);
 
+		response.addHeader("Access-Control-Expose-Headers",
+				SecurityConstants.HEADER_STRING + "," + USER_ID_HEADER + "," + EXPIRATION_TIME_HEADER);
 		response.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.getTokenPrefix() + token);
-		response.addHeader("UserID", userDto.getUserId());
+		response.addHeader(USER_ID_HEADER, userDto.getUserId());
+		response.addHeader(EXPIRATION_TIME_HEADER, String.valueOf(expirationDate.getTime()));
 	}
 
 }
