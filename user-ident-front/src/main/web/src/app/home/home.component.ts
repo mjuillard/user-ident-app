@@ -10,13 +10,20 @@ import { AppService } from '../service/app.service';
 export class HomeComponent implements OnInit {
 
   user;
+  firstName = '';
+  lastName = '';
 
   constructor(private app: AppService, private http: HttpClient) { }
 
   ngOnInit() {
-    if (!this.user) {
-      this.http.get('http://localhost:8080/users/' + this.app.getUserId())
-              .subscribe( data => this.user = data);
+    if (!this.user && this.app.getUserId()) {
+      this.http.get('//localhost:8080/users/' + this.app.getUserId())
+              .subscribe( data => {
+                this.user = data;
+                this.firstName = this.user.firstName;
+                this.lastName = this.user.lastName;
+              });
+
     }
   }
 

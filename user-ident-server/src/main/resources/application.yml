@@ -38,7 +38,7 @@ app-token:
   expirationTime: 864000000 # 10 days
   password-reset-expiration-time: 3600000 # 1 hour
 
-login-url: "/users/" # url to login to application is /users/login instead of /login
+users-url: "/users/" # url to login to application is /users/login instead of /login
 
 email-verification:
   enable: false

@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -20,8 +21,8 @@ import com.matjuillard.user.ident.server.service.UserService;
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
 
-	@Value("${login-url}")
-	private String loginUrl;
+	@Value("${users-url}")
+	private String usersUrl;
 	@Value("${email-verification.url}")
 	private String emailVerificationUrl;
 	@Value("${password-reset.request-url}")
@@ -46,7 +47,10 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 
 		http.cors().and().headers().frameOptions().sameOrigin();
-		http.csrf().disable();
+
+		// csrf
+		http.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+		// .ignoringAntMatchers("/users/login");
 
 		// add authentication filter
 		http.authorizeRequests().and().addFilter(getAuthenticationFilter());
@@ -54,14 +58,12 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 		http.authorizeRequests().and().addFilter(new AuthorizationFilter(authenticationManager()));
 
 		// index
-		/*
-		 * http.authorizeRequests().antMatchers(HttpMethod.GET, "/").permitAll();
-		 * http.authorizeRequests().antMatchers(HttpMethod.GET, "/*.js").permitAll();
-		 * http.authorizeRequests().antMatchers(HttpMethod.GET, "/*.ico").permitAll();
-		 */
+		http.authorizeRequests().antMatchers(HttpMethod.GET, "/").permitAll();
+		http.authorizeRequests().antMatchers(HttpMethod.GET, "/*.js").permitAll();
+		http.authorizeRequests().antMatchers(HttpMethod.GET, "/*.ico").permitAll();
 
 		// Create a user auth - no authentication needed
-		http.authorizeRequests().antMatchers(HttpMethod.POST, loginUrl).permitAll();
+		http.authorizeRequests().antMatchers(HttpMethod.POST, usersUrl).permitAll();
 		// Email reset Password url - no authentication needed
 		http.authorizeRequests().antMatchers(HttpMethod.GET, emailVerificationUrl).permitAll();
 		// Email reset password url - no authentication needed

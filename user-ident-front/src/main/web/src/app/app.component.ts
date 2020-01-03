@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AppService } from './service/app.service';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +17,7 @@ export class AppComponent {
 
   logout() {
 
-    this.app.logout();
+    this.app.logout(this.router);
   }
 
 }

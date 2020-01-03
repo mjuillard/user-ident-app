@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { finalize } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +19,7 @@ export class AppService {
       responseType: 'json'
     };
 
-    this.http.post('http://localhost:8080/users/login', {email, password}, {observe: 'response'})
+    this.http.post('//localhost:8080/users/login', {email, password}, {observe: 'response'})
       .subscribe(response => {
             this.setSession(response);
             return callback && callback();
@@ -50,16 +51,13 @@ export class AppService {
     return localStorage.getItem('userId');
   }
 
-  logout() {
+  logout(router) {
     localStorage.removeItem('id_token');
     localStorage.removeItem('expires_at');
     localStorage.removeItem('userId');
 
-    /*
-    this.http.post('http://localhost:8080/logout', {}).pipe( finalize(() => {
-        this.app.authenticated = false;
-        this.router.navigateByUrl('/login');
+    this.http.post('//localhost:8080/logout', {}).pipe( finalize(() => {
+        router.navigateByUrl('//localhost:8080/users/login');
     })).subscribe();
-    */
   }
 }
