@@ -10,20 +10,19 @@ export class AuthInterceptor implements HttpInterceptor {
 
         const idToken = localStorage.getItem('id_token');
 
-        // add CSRF token
-        // const cloned = req.clone({
-        //   headers: req.headers.set('X-Requested-With', 'XMLHttpRequest')
-        // });
+        // add CSRF token as HttpRequest
+        const cloned = req.clone({
+          headers: req.headers.set('X-Requested-With', 'XMLHttpRequest')
+        });
 
         // add auth token
         if (idToken) {
-          const cloned = req.clone({
+          const authReq = cloned.clone({
               headers: req.headers.set('Authorization', idToken)
           });
-          return next.handle(cloned);
-          // cloned.headers.set('Authorization', idToken);
+          return next.handle(authReq);
         }
 
-        return next.handle(req);
+        return next.handle(cloned);
     }
 }

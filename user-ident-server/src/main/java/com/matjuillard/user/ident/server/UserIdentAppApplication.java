@@ -28,4 +28,9 @@ public class UserIdentAppApplication extends SpringBootServletInitializer {
 	public SpringApplicationContext springApplicationContext() {
 		return new SpringApplicationContext();
 	}
+//
+//	@Bean
+//	HeaderHttpSessionStrategy sessionStrategy() {
+//		return new HeaderHttpSessionStrategy();
+//	}
 }

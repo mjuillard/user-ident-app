@@ -48,6 +48,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
 		http.cors().and().headers().frameOptions().sameOrigin();
 
+		// http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.NEVER);
 		// csrf
 		http.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
 		// .ignoringAntMatchers("/users/login");
@@ -94,10 +95,14 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 	public CorsConfigurationSource corsConfigurationSource() {
 		final CorsConfiguration configuration = new CorsConfiguration();
 
-		configuration.setAllowedOrigins(Arrays.asList("*"));
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTION"));
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowCredentials(true);
+		// configuration.setAllowedHeaders(Arrays.asList("x-auth-token",
+		// "x-requested-with", "x-xsrf-token"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
+		// configuration.setMaxAge(3600L);
+		// configuration.setExposedHeaders(exposedHeaders);
 
 		final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
